@@ -1,6 +1,7 @@
 {
   "name": "line-report-bot-coach",
   "version": "1.0.0",
+  "type": "module",
   "description": "撮影チーム報告ボット with AIコーチング",
   "main": "index.js",
   "scripts": {
