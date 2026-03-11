@@ -1,0 +1,18 @@
+{
+  "name": "line-report-bot-coach",
+  "version": "1.0.0",
+  "description": "撮影チーム報告ボット with AIコーチング",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node api/cron.js"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^9.3.0",
+    "googleapis": "^140.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
