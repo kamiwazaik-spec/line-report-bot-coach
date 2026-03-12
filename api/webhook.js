@@ -22,11 +22,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
   const events = req.body?.events || [];
-  // イベントがない場合（LINE検証リクエスト）は200を返す
   if (events.length === 0) {
     return res.status(200).json({ status: "ok" });
   }
   for (const event of events) {
+    // グループIDをログ出力（取得用）
+    if (event.source?.groupId) {
+      console.log("GROUP_ID:", event.source.groupId);
+    }
+    // ユーザーIDもログ出力
+    if (event.source?.userId) {
+      console.log("USER_ID:", event.source.userId, "Type:", event.source.type);
+    }
     if (event.type !== "message" || event.message.type !== "text") continue;
     const text = event.message.text.trim();
     const replyToken = event.replyToken;
