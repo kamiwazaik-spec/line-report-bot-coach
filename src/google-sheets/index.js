@@ -34,11 +34,9 @@ export async function getSheetData() {
 
   var memberMap = {};
   for (var i = 1; i < rows.length; i++) {
-    var row = rows[i];
-    var date = row[0] || "";
-    var name = row[2] || "";
-    var url = row[3] || "";
-    if (!name) continue;
+    var date = rows[i][0] || "";
+    var name = rows[i][2] || "unknown";
+    var url = rows[i][3] || "";
     if (!memberMap[name]) {
       memberMap[name] = { name: name, totalPosts: 0, todayPosts: 0, urls: [], todayUrls: [], latestDate: "" };
     }
@@ -76,4 +74,34 @@ export async function logMessage(memberName, messageText, sourceType, sourceId) 
       values: [[now, memberName, messageText, sourceType, sourceId]],
     },
   });
+}
+
+export async function getRecentMessages(limit) {
+  var auth = getAuth();
+  var sheets = google.sheets({ version: "v4", auth });
+  var maxRows = limit || 50;
+
+  var res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "\u4f1a\u8a71\u30ed\u30b0!A:E",
+  });
+
+  var rows = res.data.values || [];
+  if (rows.length < 2) {
+    return [];
+  }
+
+  var messages = [];
+  var startIdx = Math.max(1, rows.length - maxRows);
+  for (var i = startIdx; i < rows.length; i++) {
+    messages.push({
+      datetime: rows[i][0] || "",
+      memberName: rows[i][1] || "",
+      message: rows[i][2] || "",
+      sourceType: rows[i][3] || "",
+      sourceId: rows[i][4] || "",
+    });
+  }
+
+  return messages;
 }
