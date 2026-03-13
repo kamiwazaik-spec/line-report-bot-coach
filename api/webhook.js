@@ -1,5 +1,5 @@
 import { messagingApi } from "@line/bot-sdk";
-import { getSheetData } from "../src/google-sheets/index.js";
+import { getSheetData, logMessage } from "../src/google-sheets/index.js";
 
 const client = new messagingApi.MessagingApiClient({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -15,6 +15,18 @@ function getJSTDateStr() {
     day: "numeric",
     weekday: "long",
   });
+}
+
+async function getMemberName(client, sourceType, sourceUserId) {
+  try {
+    if (sourceUserId) {
+      var profile = await client.getProfile(sourceUserId);
+      return profile.displayName || "unknown";
+    }
+  } catch (e) {
+    console.error("getProfile error:", e.message);
+  }
+  return "unknown";
 }
 
 function buildMemberReport(member) {
@@ -80,7 +92,8 @@ function buildHelpMessage() {
   text += "\ud83d\udccb \u300c\u5831\u544a\u300d \u2192 \u30c1\u30fc\u30e0\u30ec\u30dd\u30fc\u30c8\n";
   text += "\ud83d\udcca \u300c\u5168\u4f53\u300d \u2192 \u30ec\u30dd\u30fc\u30c8+\u30e1\u30f3\u30d0\u30fc\u8a73\u7d30\n";
   text += "\u2753 \u300c\u30d8\u30eb\u30d7\u300d \u2192 \u3053\u306e\u30e1\u30c3\u30bb\u30fc\u30b8\n";
-  text += "\n\u6bce\u665a21\u6642\u306b\u65e5\u6b21\u30ec\u30dd\u30fc\u30c8\u304c\u81ea\u52d5\u9001\u4fe1\u3055\u308c\u307e\u3059\uff01";
+  text += "\n\u6bce\u665a21\u6642\u306b\u65e5\u6b21\u30ec\u30dd\u30fc\u30c8\u304c\u81ea\u52d5\u9001\u4fe1\u3055\u308c\u307e\u3059\uff01\n";
+  text += "\u203b \u5168\u3066\u306e\u4f1a\u8a71\u306f\u8a18\u9332\u3055\u308c\u307e\u3059\u3002";
   return text;
 }
 
@@ -99,6 +112,17 @@ export default async function handler(req, res) {
 
     const text = event.message.text.trim();
     const replyToken = event.replyToken;
+    const sourceType = event.source?.type || "unknown";
+    const sourceUserId = event.source?.userId || "";
+    const sourceId = sourceType === "group" ? event.source?.groupId : sourceUserId;
+
+    // Record all messages to spreadsheet
+    try {
+      var memberName = await getMemberName(client, sourceType, sourceUserId);
+      await logMessage(memberName, text, sourceType, sourceId);
+    } catch (logErr) {
+      console.error("logMessage error:", logErr.message);
+    }
 
     if (text === "\u5831\u544a" || text === "\u30ec\u30dd\u30fc\u30c8") {
       try {
